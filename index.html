@@ -85,7 +85,12 @@
         .branch-banner:hover::before { height: 6px; box-shadow: 0 0 30px var(--accent-color); }
         .branch-banner:hover .branch-icon { animation: pulseGlow 1.2s ease-in-out infinite; }
         .branch-banner.active { background: rgba(255,255,255,0.4); border-color: var(--accent-color); box-shadow: 0 0 0 2px var(--accent-color), 0 8px 32px rgba(0,0,0,0.08); transform: scale(1.02); z-index: 2; }
-        .branch-banner.inactive { filter: blur(2px) brightness(0.7); opacity: 0.6; transform: scale(0.96); pointer-events: none; }
+        .branch-banner.inactive {
+            filter: blur(2px) brightness(0.7);
+            opacity: 0.6;
+            transform: scale(0.96);
+            cursor: pointer; /* сохраняем возможность клика */
+        }
         @keyframes pulseGlow { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
         .branch-armavir { --accent-color: #ff6b6b; }
         .branch-krasnodar { --accent-color: #f9a825; }
@@ -594,7 +599,7 @@
             }
         }
 
-        // === Установка представления (с размытием неактивных городов) ===
+        // === Установка представления (размытие неактивных, но кликабельных) ===
         function setView(view) {
             currentView = view;
             banners.forEach(b => {
@@ -631,7 +636,7 @@
             updateUI();
         }
 
-        // === ПАРСИНГ EXCEL (восстановлен) ===
+        // === ПАРСИНГ EXCEL ===
         function parseExcel(data) {
             try {
                 const workbook = XLSX.read(data, { type: 'array' });
@@ -668,7 +673,7 @@
                     updateModalCharts();
                 }
 
-                // 3. Лист "ДЗ по интервалам" (исправлено)
+                // 3. Лист "ДЗ по интервалам"
                 const dzSheet = workbook.Sheets['ДЗ по интервалам'];
                 if (dzSheet) {
                     const dzRows = XLSX.utils.sheet_to_json(dzSheet, { header: 1, defval: '' });

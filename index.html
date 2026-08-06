@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дакорт ЮГ — Дашборд</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100vh; overflow: auto; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            padding: 24px 36px;
+            background: linear-gradient(135deg, #e0e5ec 0%, #f5f7fa 100%);
+            transition: background 0.5s ease;
+            font-size: 24px;
+            color: #1a2332;
+            min-height: 100vh;
+        }
+        .container { max-width: 1600px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+
+        /* ===== ХЕДЕР ===== */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px 30px;
+            background: rgba(255,255,255,0.25);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 16px 28px;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+            width: 100%;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            flex: 0 0 auto;
+        }
+        .header-logo {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #1a2332, #2d3b4f);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 700;
+            border: 2px solid #f9a825;
+            box-shadow: 0 0 30px rgba(249,168,37,0.2);
+            flex-shrink: 0;
+            color: #f9a825;
+            text-shadow: 0 0 15px rgba(249,168,37,0.3);
+        }
+        .header h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1a2332, #3a4b66);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+        }
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 6px 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+            flex: 1 1 auto;
+            justify-content: center;
+        }
+        .header-center .date-label,
+        .header-center .planned-label {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #3d5366;
+        }
+        .header-center .date-value,
+        .header-center .planned-value,
+        .header-center .clock {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #1a2332;
+            padding: 4px 18px;
+            border-radius: 26px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
+        }
+        .header-center .planned-value.good {
+            background: rgba(46,125,50,0.15);
+            color: #2e7d32;
+        }
+        .header-center .planned-value.bad {
+            background: rgba(198,40,40,0.15);
+            color: #c62828;
+        }
+        .header-center .clock {
+            background: rgba(255,255,255,0.2);
+            font-variant-numeric: tabular-nums;
+        }
+        .header-center input[type="date"] {
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(4px);
+            color: #1a2332;
+            outline: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .header-center input[type="date"]:focus {
+            border-color: #1e88e5;
+            box-shadow: 0 0 0 3px rgba(30,136,229,0.2);
+            background: rgba(255,255,255,0.5);
+        }
+        .controls {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex: 0 1 auto;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+        .controls .btn {
+            flex: 0 1 auto;
+            text-align: center;
+            justify-content: center;
+            background: rgba(30,136,229,0.2);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 12px 20px;
+            border-radius: 14px;
+            color: #1a2332;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            white-space: nowrap;
+        }
+        .controls .btn:hover {
+            background: rgba(30,136,229,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+        .controls .btn-folder {
+            background: rgba(255,193,7,0.15);
+        }
+        .controls .btn-folder:hover {
+            background: rgba(255,193,7,0.25);
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            flex: 0 1 auto;
+        }
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        /* ===== БАННЕРЫ ГОРОДОВ ===== */
+        .banner-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 18px;
+            flex-shrink: 0;
+        }
+        .branch-banner {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 26px 14px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.25);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .branch-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-color, #4d96ff);
+            transition: height 0.3s;
+        }
+        .branch-icon {
+            font-size: 3.8rem;
+            line-height: 1;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.05));
+        }
+        .branch-name {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #1a2332;
+        }
+        .branch-banner:hover {
+            transform: translateY(-6px);
+            background: rgba(255,255,255,0.35);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.1);
+            border-color: rgba(255,255,255,0.5);
+        }
+        .branch-banner:hover::before {
+            height: 6px;
+            box-shadow: 0 0 30px var(--accent-color);
+        }
+        .branch-banner:hover .branch-icon {
+            animation: pulseGlow 1.2s ease-in-out infinite;
+        }
+        @keyframes pulseGlow {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+        .branch-armavir { --accent-color: #ff6b6b; }
+        .branch-krasnodar { --accent-color: #f9a825; }
+        .branch-kmv { --accent-color: #43a047; }
+        .branch-novorossiysk { --accent-color: #1e88e5; }
+        .branch-tver { --accent-color: #e040a0; }
+
+        /* ===== TOTAL КАРТОЧКА ===== */
+        .total-card {
+            background: rgba(255,255,255,0.25);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 26px 36px;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .total-card:hover {
+            background: rgba(255,255,255,0.35);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+        .total-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1a2332;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .total-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            width: 100%;
+        }
+        .total-item {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(4px);
+            border-radius: 16px;
+            padding: 16px 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+            cursor: default;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .total-item:hover {
+            background: rgba(255,255,255,0.35);
+            transform: scale(1.02);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+            border-color: rgba(255,255,255,0.4);
+        }
+        .total-item-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: #ffffff;
+            text-shadow: 0 0 12px rgba(0,0,0,0.2);
+            letter-spacing: 0.3px;
+            font-weight: 700;
+            background: rgba(0,0,0,0.12);
+            padding: 4px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        .total-item-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            flex-wrap: wrap;
+        }
+        .total-item-row .plan {
+            color: #1e88e5;
+            background: rgba(30,136,229,0.08);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: inherit;
+        }
+        .total-item-row .fact {
+            color: #43a047;
+            background: rgba(67,160,71,0.08);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: inherit;
+        }
+        .total-item-row .pct {
+            background: rgba(255,255,255,0.3);
+            padding: 0 14px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            min-width: 56px;
+            text-align: center;
+            line-height: 1.6;
+            font-weight: 700;
+        }
+        .total-item-row .pct.good {
+            background: rgba(46,125,50,0.15);
+            color: #2e7d32;
+        }
+        .total-item-row .pct.bad {
+            background: rgba(198,40,40,0.15);
+            color: #c62828;
+        }
+
+        /* ===== ДЗ ПО ИНТЕРВАЛАМ ===== */
+        .dz-big-card {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 22px 36px;
+            border: 1px solid rgba(255,255,255,0.25);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+        }
+        .dz-big-card .dz-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1a2332;
+            text-align: center;
+            letter-spacing: 0.4px;
+        }
+        .dz-big-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 18px;
+            width: 100%;
+        }
+        .dz-big-item {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(8px);
+            border-radius: 14px;
+            padding: 14px 18px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.15);
+            transition: all 0.3s;
+        }
+        .dz-big-item:hover {
+            background: rgba(255,255,255,0.25);
+            transform: scale(1.02);
+        }
+        .dz-big-item .range-label {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 12px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            background: rgba(0,0,0,0.15);
+            padding: 4px 8px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .dz-big-item .dz-values {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1a2332;
+            margin: 8px 0;
+        }
+        .dz-big-item .dz-values .old {
+            color: #7a8a9e;
+            text-decoration: line-through;
+        }
+        .dz-big-item .dz-values .new {
+            color: #1a2332;
+        }
+        .dz-big-item .dz-change {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .dz-big-item .dz-change.up {
+            color: #c62828;
+        }
+        .dz-big-item .dz-change.down {
+            color: #2e7d32;
+        }
+        .dz-big-item .dz-change.neutral {
+            color: #7a8a9e;
+        }
+        .dz-big-item .dz-abs-change {
+            font-size: 0.9rem;
+            color: #3d5366;
+            margin-top: 2px;
+            font-weight: 500;
+        }
+        .dz-big-item .dz-abs-change.up {
+            color: #c62828;
+        }
+        .dz-big-item .dz-abs-change.down {
+            color: #2e7d32;
+        }
+        .dz-big-item .dz-abs-change.neutral {
+            color: #7a8a9e;
+        }
+
+        /* ===== МОДАЛЬНОЕ ОКНО ГОРОДА ===== */
+        .city-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .city-modal-overlay.active {
+            display: flex;
+        }
+        .city-modal {
+            border-radius: 32px;
+            padding: 40px 50px;
+            width: 96%;
+            max-width: 1600px;
+            max-height: 92vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.4);
+            box-shadow: 0 24px 72px rgba(0,0,0,0.08);
+            position: relative;
+            animation: slideUp 0.3s ease;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(4px);
+        }
+        .city-modal.accent-shadow {
+            box-shadow: 0 24px 72px rgba(0,0,0,0.08), inset 0 0 80px rgba(var(--accent-rgb, 200,200,200), 0.06);
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px);
+                opacity: 0; }
+            to { transform: translateY(0);
+                opacity: 1; }
+        }
+        .city-modal .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 28px;
+            font-size: 2.4rem;
+            cursor: pointer;
+            color: #3d5366;
+            background: none;
+            border: none;
+            line-height: 1;
+            transition: 0.2s;
+        }
+        .city-modal .close-btn:hover {
+            color: #1a2332;
+        }
+        .city-modal .modal-city-title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #1a2332;
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .city-modal .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 28px;
+            width: 100%;
+        }
+        .city-modal .kpi-card {
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 20px 28px;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+            transition: all 0.3s ease;
+        }
+        .city-modal .kpi-card:hover {
+            background: rgba(255,255,255,0.7);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        }
+        .city-modal .kpi-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #3d5366;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .city-modal .kpi-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+        .city-modal .kpi-row:last-child {
+            border-bottom: none;
+        }
+        .city-modal .kpi-label {
+            font-size: 1rem;
+            color: #3d5366;
+        }
+        .city-modal .kpi-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1a2332;
+            white-space: nowrap;
+        }
+        .city-modal .kpi-value.plan {
+            color: #1e88e5;
+        }
+        .city-modal .kpi-value.fact {
+            color: #43a047;
+        }
+        .city-modal .kpi-value.percent {
+            background: rgba(0,0,0,0.04);
+            padding: 0 16px;
+            border-radius: 18px;
+            font-size: 1.1rem;
+            min-width: 60px;
+            text-align: center;
+            line-height: 1.6;
+        }
+        .city-modal .kpi-value.percent.good {
+            background: rgba(46,125,50,0.12);
+            color: #2e7d32;
+        }
+        .city-modal .kpi-value.percent.bad {
+            background: rgba(198,40,40,0.12);
+            color: #c62828;
+        }
+
+        .city-modal .dz-big-card {
+            background: rgba(255,255,255,0.4);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 20px 30px;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+            width: 100%;
+        }
+        .city-modal .dz-big-card .dz-title {
+            color: #1a2332;
+        }
+        .city-modal .dz-big-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            width: 100%;
+        }
+        .city-modal .dz-big-item {
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(4px);
+            border-radius: 14px;
+            padding: 14px 18px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+        }
+        .city-modal .dz-big-item:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.02);
+        }
+        .city-modal .dz-big-item .range-label {
+            color: #1a2332;
+            text-shadow: none;
+            background: rgba(255,255,255,0.4);
+            padding: 4px 8px;
+            border-radius: 8px;
+            display: inline-block;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+        }
+        .city-modal .dz-big-item .dz-values {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1a2332;
+            margin: 8px 0;
+        }
+        .city-modal .dz-big-item .dz-values .old {
+            color: #7a8a9e;
+            text-decoration: line-through;
+        }
+        .city-modal .dz-big-item .dz-values .new {
+            color: #1a2332;
+        }
+        .city-modal .dz-big-item .dz-change {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .city-modal .dz-big-item .dz-change.up {
+            color: #c62828;
+        }
+        .city-modal .dz-big-item .dz-change.down {
+            color: #2e7d32;
+        }
+        .city-modal .dz-big-item .dz-change.neutral {
+            color: #7a8a9e;
+        }
+        .city-modal .dz-big-item .dz-abs-change {
+            font-size: 0.9rem;
+            color: #3d5366;
+            margin-top: 2px;
+            font-weight: 500;
+        }
+        .city-modal .dz-big-item .dz-abs-change.up {
+            color: #c62828;
+        }
+        .city-modal .dz-big-item .dz-abs-change.down {
+            color: #2e7d32;
+        }
+        .city-modal .dz-big-item .dz-abs-change.neutral {
+            color: #7a8a9e;
+        }
+
+        /* ===== МОДАЛЬНОЕ ОКНО TOTAL ===== */
+        .total-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .total-overlay.active {
+            display: flex;
+        }
+        .total-modal {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(4px);
+            border-radius: 32px;
+            padding: 40px 50px;
+            width: 98%;
+            max-width: 1900px;
+            max-height: 92vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.4);
+            box-shadow: 0 24px 72px rgba(0,0,0,0.08);
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+        .total-modal .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 28px;
+            font-size: 2.4rem;
+            cursor: pointer;
+            color: #3d5366;
+            background: none;
+            border: none;
+            line-height: 1;
+        }
+        .total-modal .close-btn:hover {
+            color: #1a2332;
+        }
+        .total-modal .modal-title {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .modal-chart-container {
+            width: 100%;
+        }
+        .modal-chart-tabs {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .modal-chart-tabs .tab-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px 28px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #3d5366;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+        }
+        .modal-chart-tabs .tab-btn:hover {
+            background: rgba(255,255,255,0.4);
+        }
+        .modal-chart-tabs .tab-btn.active {
+            background: rgba(30,136,229,0.3);
+            border-color: #1e88e5;
+            color: #1a2332;
+            box-shadow: 0 0 0 1px #1e88e5;
+        }
+        .modal-chart-wrapper {
+            height: 620px;
+            position: relative;
+            width: 100%;
+        }
+        .modal-chart-wrapper canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(26,35,50,0.85);
+            backdrop-filter: blur(10px);
+            padding: 8px 14px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            transform: translateY(60px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1001;
+            border-left: 3px solid #4caf50;
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast.error {
+            border-left-color: #f44336;
+        }
+
+        /* ===== ИНСТРУКЦИЯ ===== */
+        .instruction {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            color: #3d5366;
+            border: 1px solid rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .instruction i {
+            color: #f9a825;
+        }
+
+        @media (max-width: 1200px) {
+            body { padding: 18px 24px; font-size: 20px; }
+            .banner-row { grid-template-columns: repeat(3, 1fr); }
+            .city-modal .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .city-modal .dz-big-grid { grid-template-columns: repeat(3, 1fr); }
+            .dz-big-grid { grid-template-columns: repeat(3, 1fr); }
+            .total-metrics { grid-template-columns: repeat(2, 1fr); }
+            .total-modal { padding: 30px; width: 96%; }
+            .modal-chart-wrapper { height: 400px; }
+            .header { flex-direction: column; align-items: center; }
+            .controls { justify-content: center; width: 100%; }
+        }
+        @media (max-width: 768px) {
+            body { padding: 12px 16px; font-size: 18px; }
+            .banner-row { grid-template-columns: repeat(2, 1fr); }
+            .city-modal .kpi-grid { grid-template-columns: 1fr; }
+            .city-modal .dz-big-grid { grid-template-columns: repeat(2, 1fr); }
+            .dz-big-grid { grid-template-columns: repeat(2, 1fr); }
+            .total-metrics { grid-template-columns: 1fr; }
+            .total-modal { padding: 20px; width: 98%; }
+            .modal-chart-wrapper { height: 300px; }
+            .header-center { flex-wrap: wrap; justify-content: center; }
+            .controls .btn { font-size: 0.9rem; padding: 8px 12px; }
+        }
+        @media (max-width: 480px) {
+            .banner-row { grid-template-columns: 1fr; }
+            .city-modal .dz-big-grid { grid-template-columns: 1fr; }
+            .dz-big-grid { grid-template-columns: 1fr; }
+            .modal-chart-wrapper { height: 250px; }
+            .header h1 { font-size: 1.8rem; }
+            .header-logo { width: 56px; height: 56px; font-size: 2.4rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainContainer">
+        <!-- ХЕДЕР -->
+        <div class="header">
+            <div class="header-left">
+                <div class="header-logo">☯</div>
+                <h1>Дакорт ЮГ</h1>
+            </div>
+            <div class="header-center">
+                <span class="date-label"><i class="fas fa-calendar-alt" style="margin-right:6px;"></i>Данные:</span>
+                <span class="date-value" id="currentDateDisplay">—</span>
+                <span class="planned-label"><i class="fas fa-tasks" style="margin-right:6px;"></i>План:</span>
+                <span class="planned-value" id="plannedProgressDisplay">0%</span>
+                <span class="clock" id="clock"><i class="far fa-clock" style="margin-right:6px;"></i>00:00:00</span>
+                <input type="date" id="datePicker" />
+            </div>
+            <div class="controls">
+                <div class="file-input-wrapper">
+                    <button class="btn"><i class="fas fa-upload"></i> Загрузить Excel</button>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls">
+                </div>
+                <button class="btn btn-folder" id="downloadTemplateBtn"><i class="fas fa-download"></i> Скачать шаблон</button>
+                <a href="https://disk.yandex.ru/client/disk/_%D0%A0%D0%B0%D0%B1%D0%BE%D1%87%D0%B0%D1%8F/Dashbord" target="_blank" class="btn btn-folder"><i class="fas fa-folder-open"></i> Папка на Диске</a>
+            </div>
+        </div>
+
+        <div class="instruction">
+            <i class="fas fa-info-circle"></i>
+            <span><strong>Данные сохраняются в браузере</strong> – при первом открытии загружаются с GitHub, затем используются локально. Чтобы обновить, загрузите новый Excel-файл вручную.</span>
+        </div>
+
+        <!-- Баннеры городов -->
+        <div class="banner-row" id="bannerRow">
+            <div class="branch-banner branch-armavir" data-branch="Армавир"><div class="branch-icon">🏛️</div><div class="branch-name">Армавир</div></div>
+            <div class="branch-banner branch-krasnodar" data-branch="Краснодар"><div class="branch-icon">🌻</div><div class="branch-name">Краснодар</div></div>
+            <div class="branch-banner branch-kmv" data-branch="Минеральные Воды"><div class="branch-icon">🏔️</div><div class="branch-name">Минеральные Воды</div></div>
+            <div class="branch-banner branch-novorossiysk" data-branch="Новороссийск"><div class="branch-icon">⚓</div><div class="branch-name">Новороссийск</div></div>
+            <div class="branch-banner branch-tver" data-branch="Тверь"><div class="branch-icon">🏰</div><div class="branch-name">Тверь</div></div>
+        </div>
+
+        <!-- TOTAL карточка -->
+        <div class="total-card" id="totalCard">
+            <div class="total-title"><i class="fas fa-cubes" style="margin-right:12px;"></i>TOTAL</div>
+            <div class="total-metrics" id="totalMetrics">
+                <div class="total-item"><span class="total-item-label">Объём продаж</span><div class="total-item-row"><span class="plan" id="totalSalesPlan">0 ₽</span><span class="fact" id="totalSalesFact">0 ₽</span><span class="pct" id="totalSalesPct">0%</span></div></div>
+                <div class="total-item"><span class="total-item-label">Активная клиентская база</span><div class="total-item-row"><span class="plan" id="totalAkbPlan">0</span><span class="fact" id="totalAkbFact">0</span><span class="pct" id="totalAkbPct">0%</span></div></div>
+                <div class="total-item"><span class="total-item-label">Уровень сервиса</span><div class="total-item-row"><span class="plan" id="totalServicePlan">0%</span><span class="fact" id="totalServiceFact">0%</span><span class="pct" id="totalServicePct">0%</span></div></div>
+                <div class="total-item"><span class="total-item-label">ПДЗ vs ДЗ</span><div class="total-item-row"><span class="plan" id="totalPdzPlan">0 ₽</span><span class="fact" id="totalPdzFact">0 ₽</span><span class="pct" id="totalPdzPct">0%</span></div></div>
+            </div>
+        </div>
+
+        <!-- ДЗ по интервалам (общий) -->
+        <div class="dz-big-card" id="dzBigCard">
+            <div class="dz-title"><i class="fas fa-clock" style="margin-right:10px;"></i>ДЗ по интервалам (изменение к прошлой неделе)</div>
+            <div class="dz-big-grid" id="dzBigGrid"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для города -->
+    <div class="city-modal-overlay" id="cityModalOverlay">
+        <div class="city-modal" id="cityModal">
+            <button class="close-btn" id="cityModalClose"><i class="fas fa-times"></i></button>
+            <div class="modal-city-title" id="cityModalTitle">Город</div>
+            <div class="kpi-grid" id="cityKpiGrid"></div>
+            <div class="dz-big-card">
+                <div class="dz-title"><i class="fas fa-clock" style="margin-right:10px;"></i>ДЗ по интервалам (изменение к прошлой неделе)</div>
+                <div class="dz-big-grid" id="cityDzGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно TOTAL (графики) -->
+    <div class="total-overlay" id="totalOverlay">
+        <div class="total-modal">
+            <button class="close-btn" id="closeModalBtn"><i class="fas fa-times"></i></button>
+            <div class="modal-title"><i class="fas fa-chart-pie" style="margin-right:12px;"></i>TOTAL — фактические данные по месяцам</div>
+            <div class="modal-chart-container">
+                <div class="modal-chart-tabs" id="chartTabs">
+                    <button class="tab-btn active" data-chart="sales"><i class="fas fa-chart-line"></i> Продажи</button>
+                    <button class="tab-btn" data-chart="akb"><i class="fas fa-users"></i> АКБ</button>
+                    <button class="tab-btn" data-chart="service"><i class="fas fa-star"></i> Уровень сервиса</button>
+                </div>
+                <div class="modal-chart-wrapper"><canvas id="modalChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toastIcon">✅</span>
+        <span id="toastMessage">Готово</span>
+    </div>
+
+    <script>
+        // ======================== КОНФИГУРАЦИЯ ========================
+        const GITHUB_EXCEL_URL = 'https://raw.githubusercontent.com/ваш-аккаунт/репозиторий/main/Шаблон_Дакорт_ЮГ.xlsx';
+
+        // ======================== ГЛОБАЛЬНЫЕ ДАННЫЕ ========================
+        let branchData = {
+            'Армавир': { salesPlan: 0, salesFact: 0, akbPlan: 0, akbFact: 0, servicePlan: 0, serviceFact: 0 },
+            'Краснодар': { salesPlan: 0, salesFact: 0, akbPlan: 0, akbFact: 0, servicePlan: 0, serviceFact: 0 },
+            'Минеральные Воды': { salesPlan: 0, salesFact: 0, akbPlan: 0, akbFact: 0, servicePlan: 0, serviceFact: 0 },
+            'Новороссийск': { salesPlan: 0, salesFact: 0, akbPlan: 0, akbFact: 0, servicePlan: 0, serviceFact: 0 },
+            'Тверь': { salesPlan: 0, salesFact: 0, akbPlan: 0, akbFact: 0, servicePlan: 0, serviceFact: 0 }
+        };
+
+        let monthlyData = {
+            'Армавир': { labels: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'], sales: Array(12).fill(0), akb: Array(12).fill(0), service: Array(12).fill(0) },
+            'Краснодар': { labels: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'], sales: Array(12).fill(0), akb: Array(12).fill(0), service: Array(12).fill(0) },
+            'Минеральные Воды': { labels: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'], sales: Array(12).fill(0), akb: Array(12).fill(0), service: Array(12).fill(0) },
+            'Новороссийск': { labels: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'], sales: Array(12).fill(0), akb: Array(12).fill(0), service: Array(12).fill(0) },
+            'Тверь': { labels: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'], sales: Array(12).fill(0), akb: Array(12).fill(0), service: Array(12).fill(0) }
+        };
+
+        let pdzData = {
+            'Армавир': { dz: [0,0,0,0,0] },
+            'Краснодар': { dz: [0,0,0,0,0] },
+            'Минеральные Воды': { dz: [0,0,0,0,0] },
+            'Новороссийск': { dz: [0,0,0,0,0] },
+            'Тверь': { dz: [0,0,0,0,0] }
+        };
+
+        let pdzHistory = {
+            'Армавир': { dz: [0,0,0,0,0] },
+            'Краснодар': { dz: [0,0,0,0,0] },
+            'Минеральные Воды': { dz: [0,0,0,0,0] },
+            'Новороссийск': { dz: [0,0,0,0,0] },
+            'Тверь': { dz: [0,0,0,0,0] }
+        };
+
+        let pdzVsDzData = {
+            'Армавир': { dz: 0, pdz: 0 },
+            'Краснодар': { dz: 0, pdz: 0 },
+            'Минеральные Воды': { dz: 0, pdz: 0 },
+            'Новороссийск': { dz: 0, pdz: 0 },
+            'Тверь': { dz: 0, pdz: 0 }
+        };
+
+        let currentDate = new Date();
+        let overallProgress = 0;
+        let plannedProgress = 0;
+        let modalChartInstance = null;
+        let currentModalChartType = 'sales';
+
+        const cityColors = {
+            'Армавир': '#ff6b6b',
+            'Краснодар': '#f9a825',
+            'Минеральные Воды': '#43a047',
+            'Новороссийск': '#1e88e5',
+            'Тверь': '#e040a0'
+        };
+
+        // === DOM ===
+        const fileInput = document.getElementById('fileInput');
+        const toast = document.getElementById('toast');
+        const toastIcon = document.getElementById('toastIcon');
+        const toastMessage = document.getElementById('toastMessage');
+        const banners = document.querySelectorAll('.branch-banner');
+        const totalCard = document.getElementById('totalCard');
+        const totalOverlay = document.getElementById('totalOverlay');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const currentDateDisplay = document.getElementById('currentDateDisplay');
+        const plannedProgressDisplay = document.getElementById('plannedProgressDisplay');
+        const datePicker = document.getElementById('datePicker');
+        const clockEl = document.getElementById('clock');
+        const dzBigGrid = document.getElementById('dzBigGrid');
+        const downloadTemplateBtn = document.getElementById('downloadTemplateBtn');
+        const modalChartCanvas = document.getElementById('modalChart');
+        const chartTabs = document.querySelectorAll('.tab-btn');
+
+        const cityModalOverlay = document.getElementById('cityModalOverlay');
+        const cityModalClose = document.getElementById('cityModalClose');
+        const cityModalTitle = document.getElementById('cityModalTitle');
+        const cityKpiGrid = document.getElementById('cityKpiGrid');
+        const cityDzGrid = document.getElementById('cityDzGrid');
+        const cityModal = document.getElementById('cityModal');
+
+        // === Часы ===
+        function updateClock() {
+            const now = new Date();
+            const mskTime = now.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            clockEl.innerHTML = `<i class="far fa-clock" style="margin-right:6px;"></i>${mskTime}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // === Форматирование ===
+        function formatNumber(num) {
+            if (num === undefined || num === null || isNaN(num)) num = 0;
+            return num.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₽';
+        }
+        function formatShort(num) {
+            if (num >= 1000000) return (num/1000000).toFixed(1) + ' млн ₽';
+            if (num >= 1000) return (num/1000).toFixed(1) + ' тыс. ₽';
+            return num.toFixed(2) + ' ₽';
+        }
+        function formatAbs(num) {
+            if (num === 0) return '0 ₽';
+            const sign = num > 0 ? '+' : '';
+            return sign + formatNumber(Math.abs(num));
+        }
+        function formatPercent(val) {
+            if (typeof val !== 'number' || isNaN(val)) return '0%';
+            return (val * 100).toFixed(1) + '%';
+        }
+        function calcPercent(plan, fact) {
+            if (plan === 0) return 0;
+            return (fact / plan) * 100;
+        }
+        function formatDate(d) { return d ? d.toLocaleDateString('ru-RU') : '—'; }
+
+        // === Получение ПДЗ vs ДЗ ===
+        function computePdzVsDz() {
+            const branches = ['Армавир','Краснодар','Минеральные Воды','Новороссийск','Тверь'];
+            branches.forEach(b => {
+                const d = pdzData[b];
+                if (d) {
+                    const totalDz = d.dz.reduce((a,b) => a+b, 0);
+                    const pdz = d.dz.slice(2).reduce((a,b) => a+b, 0);
+                    pdzVsDzData[b].dz = totalDz;
+                    pdzVsDzData[b].pdz = pdz;
+                }
+            });
+        }
+
+        function getPdzTotals(view) {
+            let totalDz = 0, totalPdz = 0;
+            if (view === 'total') {
+                for (const b in pdzVsDzData) {
+                    totalDz += pdzVsDzData[b].dz || 0;
+                    totalPdz += pdzVsDzData[b].pdz || 0;
+                }
+            } else {
+                const d = pdzVsDzData[view];
+                if (d) {
+                    totalDz = d.dz || 0;
+                    totalPdz = d.pdz || 0;
+                }
+            }
+            return { dz: totalDz, pdz: totalPdz };
+        }
+
+        // === Обновление главной страницы ===
+        function updateMain() {
+            updateTotal();
+            updateDzBigCard('total');
+            updateHeader();
+            saveToLocalStorage();
+        }
+
+        function updateHeader() {
+            currentDateDisplay.textContent = formatDate(currentDate);
+            const planned = plannedProgress;
+            plannedProgressDisplay.textContent = planned.toFixed(1) + '%';
+            plannedProgressDisplay.className = 'planned-value' + (planned >= 100 ? ' good' : (planned < 80 ? ' bad' : ''));
+        }
+
+        function updateTotal() {
+            let tSp=0,tSf=0,tAp=0,tAf=0,tSp2=0,tSf2=0;
+            for (const b in branchData) {
+                const d = branchData[b];
+                tSp += d.salesPlan; tSf += d.salesFact;
+                tAp += d.akbPlan; tAf += d.akbFact;
+                tSp2 += d.servicePlan; tSf2 += d.serviceFact;
+            }
+            const pdz = getPdzTotals('total');
+
+            document.getElementById('totalSalesPlan').textContent = formatNumber(tSp);
+            document.getElementById('totalSalesFact').textContent = formatNumber(tSf);
+            const spPct = calcPercent(tSp, tSf);
+            const spEl = document.getElementById('totalSalesPct');
+            spEl.textContent = spPct.toFixed(1) + '%';
+            spEl.className = 'pct' + (spPct >= 100 ? ' good' : (spPct < 80 ? ' bad' : ''));
+
+            document.getElementById('totalAkbPlan').textContent = tAp.toLocaleString('ru-RU');
+            document.getElementById('totalAkbFact').textContent = tAf.toLocaleString('ru-RU');
+            const apPct = calcPercent(tAp, tAf);
+            const apEl = document.getElementById('totalAkbPct');
+            apEl.textContent = apPct.toFixed(1) + '%';
+            apEl.className = 'pct' + (apPct >= 100 ? ' good' : (apPct < 80 ? ' bad' : ''));
+
+            const servicePlanTotal = 1;
+            document.getElementById('totalServicePlan').textContent = formatPercent(servicePlanTotal);
+            const avgService = tSf2 / 5;
+            document.getElementById('totalServiceFact').textContent = formatPercent(avgService);
+            const sppPct = calcPercent(servicePlanTotal, avgService);
+            const sppEl = document.getElementById('totalServicePct');
+            sppEl.textContent = sppPct.toFixed(1) + '%';
+            sppEl.className = 'pct' + (sppPct >= 100 ? ' good' : (sppPct < 80 ? ' bad' : ''));
+
+            document.getElementById('totalPdzPlan').textContent = formatNumber(pdz.dz);
+            document.getElementById('totalPdzFact').textContent = formatNumber(pdz.pdz);
+            const pdzPct = calcPercent(pdz.dz, pdz.pdz);
+            const pdzEl = document.getElementById('totalPdzPct');
+            pdzEl.textContent = pdzPct.toFixed(1) + '%';
+            pdzEl.className = 'pct' + (pdzPct >= 100 ? ' good' : (pdzPct < 80 ? ' bad' : ''));
+        }
+
+        function updateDzBigCard(view) {
+            let targetGrid = view === 'total' ? dzBigGrid : cityDzGrid;
+            let data;
+            if (view === 'total') {
+                const ranges = ['1-7 дней','8-30 дней','30-60 дней','60-100 дней','> 100 дней'];
+                const current = ranges.map((_,i) => {
+                    let sum = 0;
+                    for (const b in pdzData) sum += pdzData[b].dz[i];
+                    return sum;
+                });
+                const lastWeek = ranges.map((_,i) => {
+                    let sum = 0;
+                    for (const b in pdzHistory) sum += pdzHistory[b].dz[i];
+                    return sum;
+                });
+                data = { ranges, lastWeek, current };
+            } else {
+                const d = pdzData[view];
+                const h = pdzHistory[view];
+                if (!d || !h) { targetGrid.innerHTML = '<div style="text-align:center;color:#a0b0c0;padding:8px;">Нет данных</div>'; return; }
+                const ranges = ['1-7 дней','8-30 дней','30-60 дней','60-100 дней','> 100 дней'];
+                data = { ranges, lastWeek: h.dz, current: d.dz };
+            }
+
+            let html = '';
+            for (let i=0; i<data.ranges.length; i++) {
+                const range = data.ranges[i];
+                const last = data.lastWeek[i];
+                const curr = data.current[i];
+                const diff = curr - last;
+                const pctChange = last !== 0 ? (diff / last) * 100 : 0;
+                let changeClass = 'neutral', changeSymbol = '➖';
+                if (pctChange > 1) { changeClass = 'up'; changeSymbol = '▲'; }
+                else if (pctChange < -1) { changeClass = 'down'; changeSymbol = '▼'; }
+                const absClass = changeClass;
+                const absSymbol = changeSymbol;
+                html += `
+                    <div class="dz-big-item">
+                        <div class="range-label">${range}</div>
+                        <div class="dz-values">
+                            <span class="old">${formatShort(last)}</span>
+                            <span class="new">${formatShort(curr)}</span>
+                        </div>
+                        <div class="dz-change ${changeClass}">${changeSymbol} ${Math.abs(pctChange).toFixed(1)}%</div>
+                        <div class="dz-abs-change ${absClass}">${absSymbol} ${formatAbs(diff)}</div>
+                    </div>
+                `;
+            }
+            targetGrid.innerHTML = html;
+        }
+
+        // === Модальное окно города ===
+        function openCityModal(branch) {
+            const data = branchData[branch];
+            if (!data) return;
+            cityModalTitle.textContent = branch;
+
+            const color = cityColors[branch] || '#4d96ff';
+            const rgb = hexToRgb(color);
+            cityModal.style.background = `rgba(255,255,255,0.85)`;
+            cityModal.style.boxShadow = `0 24px 72px rgba(0,0,0,0.08), inset 0 0 80px rgba(${rgb}, 0.06)`;
+
+            const pdz = getPdzTotals(branch);
+            const salesPct = calcPercent(data.salesPlan, data.salesFact);
+            const akbPct = calcPercent(data.akbPlan, data.akbFact);
+            const servicePct = calcPercent(data.servicePlan, data.serviceFact);
+            const pdzPct = calcPercent(pdz.dz, pdz.pdz);
+
+            cityKpiGrid.innerHTML = `
+                <div class="kpi-card">
+                    <div class="kpi-title"><i class="fas fa-chart-bar"></i> Объём продаж</div>
+                    <div class="kpi-row"><span class="kpi-label">План</span><span class="kpi-value plan">${formatNumber(data.salesPlan)}</span></div>
+                    <div class="kpi-row"><span class="kpi-label">Факт</span><span class="kpi-value fact">${formatNumber(data.salesFact)}</span></div>
+                    <div class="kpi-row"><span class="kpi-label">% выполнения</span><span class="kpi-value percent ${salesPct>=100?'good':'bad'}">${salesPct.toFixed(1)}%</span></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title"><i class="fas fa-users"></i> Активная клиентская база</div>
+                    <div class="kpi-row"><span class="kpi-label">План</span><span class="kpi-value plan">${data.akbPlan.toLocaleString('ru-RU')}</span></div>
+                    <div class="kpi-row"><span class="kpi-label">Факт</span><span class="kpi-value fact">${data.akbFact.toLocaleString('ru-RU')}</span></div>
+                    <div class="kpi-row"><span class="kpi-label">% выполнения</span><span class="kpi-value percent ${akbPct>=100?'good':'bad'}">${akbPct.toFixed(1)}%</span></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title"><i class="fas fa-star"></i> Уровень сервиса</div>
+                    <div class="kpi-row"><span class="kpi-label">План</span><span class="kpi-value plan">${formatPercent(data.servicePlan)}</span></div>
+                    <div class="kpi-row"><span class="kpi-label">Факт</span><span class="kpi-value fact">${formatPercent(data.serviceFact)}</span></div>
+                    <div class="kpi-row"><span class="kpi-label">% выполнения</span><span class="kpi-value percent ${servicePct>=100?'good':'bad'}">${servicePct.toFixed(1)}%</span></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title"><i class="fas fa-balance-scale"></i> ПДЗ vs ДЗ</div>
+                    <div class="kpi-row"><span class="kpi-label">План (ДЗ)</span><span class="kpi-value plan">${formatNumber(pdz.dz)}</span></div>
+                    <div class="kpi-row"><span class="kpi-label">Факт (ПДЗ)</span><span class="kpi-value fact">${formatNumber(pdz.pdz)}</span></div>
+                    <div class="kpi-row"><span class="kpi-label">% выполнения</span><span class="kpi-value percent ${pdzPct>=100?'good':'bad'}">${pdzPct.toFixed(1)}%</span></div>
+                </div>
+            `;
+
+            updateDzBigCard(branch);
+            cityModalOverlay.classList.add('active');
+            document.getElementById('mainContainer').style.opacity = '0.3';
+        }
+
+        function closeCityModal() {
+            cityModalOverlay.classList.remove('active');
+            document.getElementById('mainContainer').style.opacity = '1';
+        }
+
+        // === Модальное окно TOTAL (графики) ===
+        function openTotalModal() {
+            totalOverlay.classList.add('active');
+            document.getElementById('mainContainer').style.opacity = '0.3';
+            updateModalChart();
+        }
+
+        function closeTotalModal() {
+            totalOverlay.classList.remove('active');
+            document.getElementById('mainContainer').style.opacity = '1';
+        }
+
+        // === График TOTAL ===
+        function initModalChart() {
+            const ctx = modalChartCanvas.getContext('2d');
+            modalChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthlyData['Армавир'].labels,
+                    datasets: [{
+                        label: 'Продажи (млн ₽)',
+                        data: [],
+                        borderColor: '#1e88e5',
+                        backgroundColor: 'rgba(30,136,229,0.08)',
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 5,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#1e88e5',
+                        pointBorderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top', labels: { font: { size: 16, weight: '600', color: '#1a2332' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let val = context.parsed.y;
+                                    if (currentModalChartType === 'sales') return (val * 1).toFixed(1) + ' млн ₽';
+                                    if (currentModalChartType === 'akb') return val.toLocaleString('ru-RU') + ' шт';
+                                    if (currentModalChartType === 'service') return val.toFixed(1) + '%';
+                                    return val;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#1a2332',
+                            font: { weight: 'bold', size: 13 },
+                            formatter: function(value) {
+                                if (currentModalChartType === 'sales') return value.toFixed(1) + ' млн';
+                                if (currentModalChartType === 'akb') return value.toFixed(0);
+                                if (currentModalChartType === 'service') return value.toFixed(1) + '%';
+                                return value;
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false, color: 'rgba(0,0,0,0.04)' },
+                            ticks: { font: { size: 14, color: '#3d5366' } }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.06)' },
+                            ticks: {
+                                font: { size: 14, color: '#3d5366' },
+                                callback: function(value) {
+                                    if (currentModalChartType === 'sales') return value.toFixed(1) + ' млн';
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+            updateModalChart();
+        }
+
+        function updateModalChart() {
+            if (!modalChartInstance) return;
+            const months = monthlyData['Армавир'].labels;
+            let data, label, color;
+            if (currentModalChartType === 'sales') {
+                data = months.map((_,i) => {
+                    let s=0; for (const b in monthlyData) s += monthlyData[b].sales[i];
+                    return s / 1000000;
+                });
+                label = 'Продажи (млн ₽)';
+                color = '#1e88e5';
+            } else if (currentModalChartType === 'akb') {
+                data = months.map((_,i) => {
+                    let s=0; for (const b in monthlyData) s += monthlyData[b].akb[i];
+                    return s;
+                });
+                label = 'Активная клиентская база (шт)';
+                color = '#43a047';
+            } else if (currentModalChartType === 'service') {
+                data = months.map((_,i) => {
+                    let s=0,c=0; for (const b in monthlyData) { s += monthlyData[b].service[i]; c++; }
+                    return Math.round((s/c)*1000)/1000;
+                });
+                label = 'Уровень сервиса (%)';
+                color = '#f9a825';
+            }
+            modalChartInstance.data.labels = months;
+            modalChartInstance.data.datasets[0].data = data;
+            modalChartInstance.data.datasets[0].label = label;
+            modalChartInstance.data.datasets[0].borderColor = color;
+            modalChartInstance.data.datasets[0].backgroundColor = color + '15';
+            modalChartInstance.data.datasets[0].pointBorderColor = color;
+            modalChartInstance.options.scales.y.ticks.callback = function(value) {
+                if (currentModalChartType === 'sales') return value.toFixed(1) + ' млн';
+                return value;
+            };
+            modalChartInstance.update();
+        }
+
+        // === Сохранение / загрузка в localStorage ===
+        function saveToLocalStorage() {
+            try {
+                const state = {
+                    branchData,
+                    monthlyData,
+                    pdzData,
+                    pdzHistory,
+                    pdzVsDzData,
+                    plannedProgress,
+                    overallProgress,
+                    currentDate: currentDate.toISOString()
+                };
+                localStorage.setItem('dakort_dashboard_state', JSON.stringify(state));
+            } catch (e) { /* ignore */ }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem('dakort_dashboard_state');
+                if (!raw) return false;
+                const state = JSON.parse(raw);
+                branchData = state.branchData || branchData;
+                monthlyData = state.monthlyData || monthlyData;
+                pdzData = state.pdzData || pdzData;
+                pdzHistory = state.pdzHistory || pdzHistory;
+                pdzVsDzData = state.pdzVsDzData || pdzVsDzData;
+                plannedProgress = state.plannedProgress || 0;
+                overallProgress = state.overallProgress || 0;
+                if (state.currentDate) {
+                    currentDate = new Date(state.currentDate);
+                    if (isNaN(currentDate)) currentDate = new Date();
+                }
+                return true;
+            } catch (e) { return false; }
+        }
+
+        // === Загрузка с GitHub ===
+        function loadFromGitHub() {
+            return fetch(GITHUB_EXCEL_URL)
+                .then(response => {
+                    if (!response.ok) throw new Error('Не удалось загрузить файл');
+                    return response.arrayBuffer();
+                })
+                .then(data => {
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    parseWorkbook(workbook);
+                    showToast('Данные обновлены с GitHub');
+                })
+                .catch(err => {
+                    console.warn('Не удалось загрузить данные с GitHub:', err);
+                    showToast('Не удалось загрузить данные с GitHub', true);
+                });
+        }
+
+        // === Парсинг Excel ===
+        function parseWorkbook(workbook) {
+            try {
+                const sheet = workbook.Sheets['Сводная'];
+                if (!sheet) { showToast('Лист "Сводная" не найден', true); return; }
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                processDataFromCSV(rows);
+
+                const dynSheet = workbook.Sheets['Динамика'];
+                if (dynSheet) {
+                    const dynRows = XLSX.utils.sheet_to_json(dynSheet, { header: 1, defval: '' });
+                    const newMonthlyData = {
+                        'Армавир': { labels: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'], sales: [], akb: [], service: [] },
+                        'Краснодар': { labels: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'], sales: [], akb: [], service: [] },
+                        'Минеральные Воды': { labels: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'], sales: [], akb: [], service: [] },
+                        'Новороссийск': { labels: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'], sales: [], akb: [], service: [] },
+                        'Тверь': { labels: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'], sales: [], akb: [], service: [] }
+                    };
+                    for (let i = 1; i < dynRows.length; i++) {
+                        const row = dynRows[i];
+                        if (!row || row.length < 3) continue;
+                        const branch = String(row[0] || '').trim();
+                        const metric = String(row[1] || '').trim();
+                        if (!newMonthlyData[branch]) continue;
+                        const values = row.slice(2, 14).map(v => parseFloat(String(v).replace(/\s/g, '').replace(',', '.')) || 0);
+                        if (metric.includes('Продажи')) newMonthlyData[branch].sales = values;
+                        else if (metric.includes('АКБ')) newMonthlyData[branch].akb = values;
+                        else if (metric.includes('Уровень сервиса')) newMonthlyData[branch].service = values;
+                    }
+                    monthlyData = newMonthlyData;
+                }
+
+                const dzSheet = workbook.Sheets['ДЗ по интервалам'];
+                if (dzSheet) {
+                    const dzRows = XLSX.utils.sheet_to_json(dzSheet, { header: 1, defval: '' });
+                    let currentBlock = false, historyBlock = false;
+                    const newPdzData = {
+                        'Армавир': { dz: [0,0,0,0,0] },
+                        'Краснодар': { dz: [0,0,0,0,0] },
+                        'Минеральные Воды': { dz: [0,0,0,0,0] },
+                        'Новороссийск': { dz: [0,0,0,0,0] },
+                        'Тверь': { dz: [0,0,0,0,0] }
+                    };
+                    const newPdzHistory = {
+                        'Армавир': { dz: [0,0,0,0,0] },
+                        'Краснодар': { dz: [0,0,0,0,0] },
+                        'Минеральные Воды': { dz: [0,0,0,0,0] },
+                        'Новороссийск': { dz: [0,0,0,0,0] },
+                        'Тверь': { dz: [0,0,0,0,0] }
+                    };
+                    for (let i = 0; i < dzRows.length; i++) {
+                        const row = dzRows[i];
+                        if (!row || row.length === 0) continue;
+                        const first = String(row[0] || '').trim();
+                        if (first.includes('Текущие')) { currentBlock = true; historyBlock = false; continue; }
+                        else if (first.includes('Неделю назад')) { historyBlock = true; currentBlock = false; continue; }
+                        let branch = null;
+                        for (const b in newPdzData) {
+                            if (first.includes(b)) { branch = b; break; }
+                        }
+                        if (branch) {
+                            const values = row.slice(1, 6).map(v => parseFloat(String(v).replace(/\s/g, '').replace(',', '.')) || 0);
+                            if (currentBlock) newPdzData[branch].dz = values;
+                            else if (historyBlock) newPdzHistory[branch].dz = values;
+                        }
+                    }
+                    pdzData = newPdzData;
+                    pdzHistory = newPdzHistory;
+                    computePdzVsDz();
+                }
+
+                const vsSheet = workbook.Sheets['ДЗ vs ПДЗ'];
+                if (vsSheet) {
+                    const vsRows = XLSX.utils.sheet_to_json(vsSheet, { header: 1, defval: '' });
+                    const newPdzVsDz = {
+                        'Армавир': { dz: 0, pdz: 0 },
+                        'Краснодар': { dz: 0, pdz: 0 },
+                        'Минеральные Воды': { dz: 0, pdz: 0 },
+                        'Новороссийск': { dz: 0, pdz: 0 },
+                        'Тверь': { dz: 0, pdz: 0 }
+                    };
+                    for (let i = 0; i < vsRows.length; i++) {
+                        const row = vsRows[i];
+                        if (!row || row.length < 3) continue;
+                        const first = String(row[0] || '').trim();
+                        let branch = null;
+                        for (const b in newPdzVsDz) {
+                            if (first.includes(b)) { branch = b; break; }
+                        }
+                        if (branch) {
+                            const dz = parseFloat(String(row[1]).replace(/\s/g, '').replace(',', '.')) || 0;
+                            const pdz = parseFloat(String(row[2]).replace(/\s/g, '').replace(',', '.')) || 0;
+                            newPdzVsDz[branch].dz = dz;
+                            newPdzVsDz[branch].pdz = pdz;
+                        }
+                    }
+                    pdzVsDzData = newPdzVsDz;
+                } else {
+                    computePdzVsDz();
+                }
+
+                updateMain();
+            } catch (err) {
+                console.error(err);
+                showToast('Ошибка при обработке файла', true);
+            }
+        }
+
+        function parseExcel(data) {
+            try {
+                const workbook = XLSX.read(data, { type: 'array' });
+                parseWorkbook(workbook);
+                showToast('Данные загружены из Excel');
+            } catch (err) {
+                console.error(err);
+                showToast('Ошибка при парсинге файла', true);
+            }
+        }
+
+        function processDataFromCSV(rows) {
+            const salesPlanRow = rows.find(row => row[0] && row[0].includes('Объём продаж') && row[0].includes('план'));
+            const salesFactRow = rows.find(row => row[0] && row[0].includes('Объём продаж') && row[0].includes('факт'));
+            const akbPlanRow = rows.find(row => row[0] && row[0].includes('АКБ') && row[0].includes('план'));
+            const akbFactRow = rows.find(row => row[0] && row[0].includes('АКБ') && row[0].includes('факт'));
+            const servicePlanRow = rows.find(row => row[0] && row[0].includes('Уровень сервиса') && row[0].includes('план'));
+            const serviceFactRow = rows.find(row => row[0] && row[0].includes('Уровень сервиса') && row[0].includes('факт'));
+            const overallProgressRow = rows.find(row => row[0] && row[0].includes('Выполнение плана'));
+            const plannedProgressRow = rows.find(row => row[0] && row[0].includes('Плановое выполнение'));
+
+            const filials = ['Армавир', 'Краснодар', 'Минеральные Воды', 'Новороссийск', 'Тверь'];
+            const newBranchData = {};
+            filials.forEach((name, idx) => {
+                const colIndex = idx + 1;
+                const servicePlan = 1;
+                const serviceFact = parseFloat(serviceFactRow ? serviceFactRow[colIndex] : 0);
+                newBranchData[name] = {
+                    salesPlan: parseFloat(salesPlanRow ? salesPlanRow[colIndex] : 0),
+                    salesFact: parseFloat(salesFactRow ? salesFactRow[colIndex] : 0),
+                    akbPlan: parseFloat(akbPlanRow ? akbPlanRow[colIndex] : 0),
+                    akbFact: parseFloat(akbFactRow ? akbFactRow[colIndex] : 0),
+                    servicePlan: servicePlan,
+                    serviceFact: serviceFact
+                };
+            });
+            const newOverallProgress = parseFloat(overallProgressRow ? overallProgressRow[1] : 0);
+            const newPlannedProgress = parseFloat(plannedProgressRow ? plannedProgressRow[1] : 0);
+            branchData = newBranchData;
+            overallProgress = newOverallProgress;
+            plannedProgress = newPlannedProgress;
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
+        }
+
+        // ============================================================
+        //  ГЕНЕРАЦИЯ ШАБЛОНА EXCEL С ПОЛНЫМ ФОРМАТИРОВАНИЕМ (ТАБЛИЦЫ)
+        // ============================================================
+        function generateTemplate() {
+            const wb = XLSX.utils.book_new();
+
+            // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ СТИЛЕЙ ----------
+            const borderStyle = { style: 'thin', color: { rgb: "B0B0B0" } };
+            const borderAll = { top: borderStyle, bottom: borderStyle, left: borderStyle, right: borderStyle };
+
+            function styleCell(cell, opts = {}) {
+                if (!cell) return;
+                if (!cell.s) cell.s = {};
+                const s = cell.s;
+                if (opts.font) s.font = opts.font;
+                if (opts.alignment) s.alignment = opts.alignment;
+                if (opts.border) s.border = opts.border;
+                if (opts.numFmt) s.numFmt = opts.numFmt;
+                if (opts.fill) s.fill = opts.fill;
+            }
+
+            function applyTableStyle(ws, data, options = {}) {
+                // data - массив строк, каждая строка - массив значений
+                // options: headerRow (номер строки с заголовками, 0-based), numberFormatRows (массив номеров строк для числового формата)
+                const headerRow = options.headerRow !== undefined ? options.headerRow : 0;
+                const numFmtRows = options.numFmtRows || [];
+                const numFmtCols = options.numFmtCols || [];
+                const dateCols = options.dateCols || [];
+
+                for (let r = 0; r < data.length; r++) {
+                    for (let c = 0; c < data[r].length; c++) {
+                        const cell = ws[XLSX.utils.encode_cell({ r: r, c: c })];
+                        if (!cell) continue;
+                        // Границы
+                        styleCell(cell, { border: borderAll });
+
+                        // Выравнивание
+                        if (r === headerRow) {
+                            // Заголовки – жирный, по центру
+                            styleCell(cell, {
+                                font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
+                                alignment: { horizontal: "center", vertical: "center" },
+                                fill: { fgColor: { rgb: "2C3E50" } }
+                            });
+                        } else {
+                            // Данные
+                            let align = "left";
+                            if (numFmtRows.includes(r) || numFmtCols.includes(c)) {
+                                align = "right";
+                            }
+                            if (dateCols.includes(c)) align = "center";
+                            styleCell(cell, {
+                                alignment: { horizontal: align, vertical: "center" }
+                            });
+                        }
+                    }
+                }
+            }
+
+            // ---------- 1. ЛИСТ "Сводная" ----------
+            const dataSvod = [
+                ['Дакорт ЮГ - Сводный отчёт'],
+                ['Дата заполнения:', '2026-08-04 00:00:00'],
+                ['Плановое выполнение (вручную):', '1'],
+                [],
+                ['Показатель', 'Армавир', 'Краснодар', 'Минеральные Воды', 'Новороссийск', 'Тверь'],
+                ['Объём продаж (план, ₽)', 89020665.5, 122041000, 66863818.7, 85896888.01, 22399657.3],
+                ['Объём продаж (факт, ₽)', 89184561.79, 98255000, 79435426.93, 88994157.83, 19870698],
+                ['АКБ (план, шт)', 1986, 2724, 2129, 2473, 803],
+                ['АКБ (факт, шт)', 2052, 2725, 2236, 2707, 808],
+                ['Уровень сервиса (план, %)', 1, 1, 1, 1, 1],
+                ['Уровень сервиса (факт, %)', 0.985, 0.9769, 0.988, 0.984, 0.97],
+                ['Выполнение плана (целевое, %)', ''],
+                [],
+                ['Инструкция:'],
+                ['Все ячейки разблокированы для заполнения'],
+                ['Дата в формате ДД.ММ.ГГГГ, значение прогресса в %']
+            ];
+            const wsSvod = XLSX.utils.aoa_to_sheet(dataSvod);
+            wsSvod['!cols'] = [{ wch: 30 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
+
+            // Применяем стили к таблице (строки 4-10 – данные, строка 4 – заголовки)
+            for (let r = 4; r <= 10; r++) {
+                for (let c = 0; c < 6; c++) {
+                    const cell = wsSvod[XLSX.utils.encode_cell({ r: r, c: c })];
+                    if (!cell) continue;
+                    const isHeader = (r === 4);
+                    styleCell(cell, { border: borderAll });
+                    if (isHeader) {
+                        styleCell(cell, {
+                            font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
+                            alignment: { horizontal: "center", vertical: "center" },
+                            fill: { fgColor: { rgb: "2C3E50" } }
+                        });
+                    } else {
+                        let align = "left";
+                        if (c > 0) align = "right";
+                        styleCell(cell, {
+                            alignment: { horizontal: align, vertical: "center" }
+                        });
+                        // Числовые форматы
+                        if (c > 0 && typeof cell.v === 'number') {
+                            if (r === 5 || r === 6) styleCell(cell, { numFmt: '# ##0.00' });
+                            else if (r === 7 || r === 8) styleCell(cell, { numFmt: '# ##0' });
+                            else if (r === 9 || r === 10) styleCell(cell, { numFmt: '0.0%' });
+                        }
+                    }
+                }
+            }
+            XLSX.utils.book_append_sheet(wb, wsSvod, 'Сводная');
+
+            // ---------- 2. ЛИСТ "ДЗ по интервалам" ----------
+            const dataDz = [
+                ['ДЗ по интервалам'],
+                ['Текущие'],
+                ['Филиал', '1-7 дней', '8-30 дней', '30-60 дней', '60-100 дней', '> 100 дней'],
+                ['Армавир', 5133943.42, 1968355.87, 34277.46, 15803.37, 602914.91],
+                ['Краснодар', 3713348.02, 2415642.2, 190866.81, 8521.56, 1210096.71],
+                ['Минеральные Воды', 3163141.25, 2598517.35, 347834.16, 0, 61078.5],
+                ['Новороссийск', 2927515.48, 1529093.03, 418218.03, 221566.67, 594606.94],
+                ['Тверь', 1100030, 754313, 41264, 0, 161561],
+                [],
+                ['Неделю назад'],
+                ['Филиал', '1-7 дней', '8-30 дней', '30-60 дней', '60-100 дней', '> 100 дней'],
+                ['Армавир', 5833021.05, 1707927.06, 56724.34, 6011, 604429.78],
+                ['Краснодар', 3776962.72, 2290205.02, 190921.79, 40074.6, 1210096.71],
+                ['Минеральные Воды', 3258917.9, 1812651.21, 253831.88, 14.68, 64887.17],
+                ['Новороссийск', 2997582.69, 2367117.74, 741980.02, 409951.91, 476672.63],
+                ['Тверь', 1120323, 480178, 51284, 28401, 161561]
+            ];
+            const wsDz = XLSX.utils.aoa_to_sheet(dataDz);
+            wsDz['!cols'] = [{ wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }];
+
+            // Стили: две таблицы – строки 2-8 и 10-16
+            function styleDzTable(startRow, endRow) {
+                for (let r = startRow; r <= endRow; r++) {
+                    for (let c = 0; c < 6; c++) {
+                        const cell = wsDz[XLSX.utils.encode_cell({ r: r, c: c })];
+                        if (!cell) continue;
+                        const isHeader = (r === startRow);
+                        styleCell(cell, { border: borderAll });
+                        if (isHeader) {
+                            styleCell(cell, {
+                                font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
+                                alignment: { horizontal: "center", vertical: "center" },
+                                fill: { fgColor: { rgb: "2C3E50" } }
+                            });
+                        } else {
+                            let align = (c === 0) ? "left" : "right";
+                            styleCell(cell, {
+                                alignment: { horizontal: align, vertical: "center" }
+                            });
+                            if (c > 0 && typeof cell.v === 'number') {
+                                styleCell(cell, { numFmt: '# ##0.00' });
+                            }
+                        }
+                    }
+                }
+            }
+            styleDzTable(2, 7);
+            styleDzTable(10, 15);
+
+            // Заголовки "Текущие" и "Неделю назад" – жирный, по центру, объединять не будем, просто выделим
+            const titleCells = [ { r: 1, c: 0 }, { r: 9, c: 0 } ];
+            titleCells.forEach(({r,c}) => {
+                const cell = wsDz[XLSX.utils.encode_cell({ r: r, c: c })];
+                if (cell) {
+                    styleCell(cell, {
+                        font: { bold: true, sz: 14, color: { rgb: "1A2332" } },
+                        alignment: { horizontal: "center", vertical: "center" }
+                    });
+                }
+            });
+            XLSX.utils.book_append_sheet(wb, wsDz, 'ДЗ по интервалам');
+
+            // ---------- 3. ЛИСТ "Динамика" ----------
+            const dataDyn = [
+                ['Филиал', 'Показатель', 'Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
+                ['Армавир', 'Продажи (тыс. ₽)', 41708035, 46949309, 56305168.03, 66418018.34, 64459570, 79052166.79, 89184561.79, '', '', '', '', ''],
+                ['Армавир', 'АКБ (шт)', 1698, 1787, 1842, 1955, 1985, 1971, 2052, '', '', '', '', ''],
+                ['Армавир', 'Уровень сервиса (%)', 0.987, 0.984, 0.982, 0.973, 0.983, 0.98, 0.985, '', '', '', '', ''],
+                ['Краснодар', 'Продажи (тыс. ₽)', 53480915, 58444000, 70684000, 89994000, 82722000, 95807000, 98255000, '', '', '', '', ''],
+                ['Краснодар', 'АКБ (шт)', 2056, 2340, 2441, 2524, 2604, 2692, 2725, '', '', '', '', ''],
+                ['Краснодар', 'Уровень сервиса (%)', 0.975, 0.976, 0.966, 0.979, 0.972, 0.982, 0.977, '', '', '', '', ''],
+                ['Минеральные Воды', 'Продажи (тыс. ₽)', 28664149, 33975742.04, 39447449.45, 57159412.2, 53233367.7, 66348117, 79435426.93, '', '', '', '', ''],
+                ['Минеральные Воды', 'АКБ (шт)', 1455, 1535, 1626, 2091, 2074, 2183, 2236, '', '', '', '', ''],
+                ['Минеральные Воды', 'Уровень сервиса (%)', 0.99, 0.99, 0.987, 0.972, 0.968, 0.961, 0.988, '', '', '', '', ''],
+                ['Новороссийск', 'Продажи (тыс. ₽)', 18492153.48, 20330361.34, 26124446.65, 29440359.68, 34375873.9, 59971725.75, 88994157.83, '', '', '', '', ''],
+                ['Новороссийск', 'АКБ (шт)', 1045, 1142, 1259, 1451, 1741, 2350, 2707, '', '', '', '', ''],
+                ['Новороссийск', 'Уровень сервиса (%)', 0.973, 0.987, 0.985, 0.97, 0.978, 0.968, 0.984, '', '', '', '', ''],
+                ['Тверь', 'Продажи (тыс. ₽)', 7885717, 8730617, 10370064, 13460992, 14712223, 16883919, 19870700, '', '', '', '', ''],
+                ['Тверь', 'АКБ (шт)', 573, 605, 695, 752, 683, 562, 808, '', '', '', '', ''],
+                ['Тверь', 'Уровень сервиса (%)', 0.977, 0.982, 0.985, 0.983, 0.991, 0.969, 0.97, '', '', '', '', '']
+            ];
+            const wsDyn = XLSX.utils.aoa_to_sheet(dataDyn);
+            wsDyn['!cols'] = [{ wch: 18 }, { wch: 24 }, ...Array(12).fill({ wch: 14 })];
+
+            // Стили для всей таблицы (строки 0-15)
+            for (let r = 0; r < dataDyn.length; r++) {
+                for (let c = 0; c < dataDyn[r].length; c++) {
+                    const cell = wsDyn[XLSX.utils.encode_cell({ r: r, c: c })];
+                    if (!cell) continue;
+                    const isHeader = (r === 0);
+                    styleCell(cell, { border: borderAll });
+                    if (isHeader) {
+                        styleCell(cell, {
+                            font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
+                            alignment: { horizontal: "center", vertical: "center" },
+                            fill: { fgColor: { rgb: "2C3E50" } }
+                        });
+                    } else {
+                        let align = "left";
+                        if (c >= 2) align = "right";
+                        if (c === 0 || c === 1) align = "left";
+                        styleCell(cell, {
+                            alignment: { horizontal: align, vertical: "center" }
+                        });
+                        // Числовые форматы для колонок c>=2
+                        if (c >= 2 && typeof cell.v === 'number') {
+                            const metric = dataDyn[r][1] || '';
+                            if (metric.includes('Продажи')) styleCell(cell, { numFmt: '# ##0.00' });
+                            else if (metric.includes('АКБ')) styleCell(cell, { numFmt: '# ##0' });
+                            else if (metric.includes('Уровень сервиса')) styleCell(cell, { numFmt: '0.0%' });
+                        }
+                    }
+                }
+            }
+            XLSX.utils.book_append_sheet(wb, wsDyn, 'Динамика');
+
+            // ---------- 4. ЛИСТ "ДЗ vs ПДЗ" ----------
+            const dataVs = [
+                ['Филиал', 'ДЗ (план)', 'ПДЗ (факт)'],
+                ['Армавир', 7720895.03, 653021.74],
+                ['Краснодар', 7534575.30, 1407549.08],
+                ['Минеральные Воды', 6173571.26, 408912.66],
+                ['Новороссийск', 5689001.15, 1234391.64],
+                ['Тверь', 2055168, 202825]
+            ];
+            const wsVs = XLSX.utils.aoa_to_sheet(dataVs);
+            wsVs['!cols'] = [{ wch: 22 }, { wch: 18 }, { wch: 18 }];
+
+            for (let r = 0; r < dataVs.length; r++) {
+                for (let c = 0; c < dataVs[r].length; c++) {
+                    const cell = wsVs[XLSX.utils.encode_cell({ r: r, c: c })];
+                    if (!cell) continue;
+                    const isHeader = (r === 0);
+                    styleCell(cell, { border: borderAll });
+                    if (isHeader) {
+                        styleCell(cell, {
+                            font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
+                            alignment: { horizontal: "center", vertical: "center" },
+                            fill: { fgColor: { rgb: "2C3E50" } }
+                        });
+                    } else {
+                        let align = (c === 0) ? "left" : "right";
+                        styleCell(cell, {
+                            alignment: { horizontal: align, vertical: "center" }
+                        });
+                        if (c > 0 && typeof cell.v === 'number') {
+                            styleCell(cell, { numFmt: '# ##0.00' });
+                        }
+                    }
+                }
+            }
+            XLSX.utils.book_append_sheet(wb, wsVs, 'ДЗ vs ПДЗ');
+
+            // ---------- СОХРАНЕНИЕ ФАЙЛА ----------
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Шаблон_Дакорт_ЮГ.xlsx';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Шаблон скачан');
+        }
+
+        // === Обработчики ===
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files.length > 0) {
+                const file = this.files[0];
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (ext !== 'xlsx' && ext !== 'xls') {
+                    showToast('Выберите файл Excel', true);
+                    this.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const data = new Uint8Array(ev.target.result);
+                    parseExcel(data);
+                };
+                reader.onerror = function() { showToast('Ошибка чтения', true); };
+                reader.readAsArrayBuffer(file);
+            }
+            this.value = '';
+        });
+
+        banners.forEach(b => b.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const branch = this.dataset.branch;
+            openCityModal(branch);
+        }));
+
+        totalCard.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openTotalModal();
+        });
+
+        closeModalBtn.addEventListener('click', closeTotalModal);
+        totalOverlay.addEventListener('click', function(e) {
+            if (e.target === this) closeTotalModal();
+        });
+
+        cityModalClose.addEventListener('click', closeCityModal);
+        cityModalOverlay.addEventListener('click', function(e) {
+            if (e.target === this) closeCityModal();
+        });
+
+        datePicker.addEventListener('change', function() {
+            const val = this.value;
+            if (val) {
+                const parts = val.split('-');
+                const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                currentDateDisplay.textContent = formatDate(d);
+                showToast(`Выбрана дата: ${formatDate(d)}`);
+            }
+        });
+
+        downloadTemplateBtn.addEventListener('click', generateTemplate);
+
+        chartTabs.forEach(btn => {
+            btn.addEventListener('click', function() {
+                chartTabs.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentModalChartType = this.dataset.chart;
+                updateModalChart();
+            });
+        });
+
+        function showToast(msg, isError = false) {
+            toastIcon.textContent = isError ? '❌' : '✅';
+            toastMessage.textContent = msg;
+            toast.classList.toggle('error', isError);
+            toast.classList.add('show');
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // === Инициализация ===
+        const loaded = loadFromLocalStorage();
+        computePdzVsDz();
+        initModalChart();
+
+        const today = new Date();
+        datePicker.value = today.toISOString().split('T')[0];
+        if (!loaded) {
+            currentDate = today;
+        }
+        currentDateDisplay.textContent = formatDate(currentDate);
+        updateMain();
+
+        if (!loaded) {
+            setTimeout(() => {
+                loadFromGitHub().then(() => {
+                    updateMain();
+                });
+            }, 500);
+        }
+
+        window.addEventListener('beforeunload', function() {
+            saveToLocalStorage();
+        });
+    </script>
+</body>
+</html>
